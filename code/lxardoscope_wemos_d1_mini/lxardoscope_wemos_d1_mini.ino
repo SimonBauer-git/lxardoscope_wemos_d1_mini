@@ -49,10 +49,9 @@ void loop() {
     sensorValue = (analogRead(A0)/2.046);
 //  Read the internal adc, currently configured to say it is 5v if 1023 is read, modify the value 2.046 if you want it to be something else (display sceme is 500 is 5.00v as an example) 
     
-    if(cal1)
-    {sensorValue=0;                         
-    cal1=false;}
-//attempt at a calibration routine (we dont need this as we use the internal adc reference but the linux app wants a calibration so we give it one)
+    if(cal1==true)
+    {sensorValue=0;}
+//a calibration routine (we dont need this as we use the internal adc reference but the linux app wants a calibration so we give it one)
 //        sensorValue = test;
 // shift sample by 3 bits, and select higher byte  
       hb=highByte(sensorValue<<3); 
@@ -77,10 +76,11 @@ void loop() {
 //      }
       if(Serial.available()) {
 		char inChar = Serial.read();
-		if (inChar == '1') {            // cal channel 1
+		if (inChar == '1') {            // cal
 			      // AC1 off
 			cal1=true;
-        }                
-		}
+        }
+	      	else if(inChar =='2'){		// ac/dc coupling
+		cal1=false;}
  }
 

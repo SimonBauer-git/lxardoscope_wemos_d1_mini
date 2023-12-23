@@ -20,6 +20,6 @@ void loop()
 void scope()  //have an extra function that does the looping as this is faster than void loop
 {while (true)
 {  system_adc_read_fast(adc_addr, 1, 1);
-  cbuf[0] = 0x80 | adc_addr[0] >> 3;
-  cbuf[1] = (adc_addr[0] << 4) & 0x70;
+  cbuf[0] = 0x80 | adc_addr[0] >> 4;
+  cbuf[1] = (adc_addr[0] << 3) & 0x70;
   Serial.write(cbuf, 2);}}

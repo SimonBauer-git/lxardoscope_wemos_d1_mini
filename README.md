@@ -8,8 +8,23 @@ just download the lxardoscope code for linux, specify 2000000 BAUD in the code a
 either use a linux vm and then do the same as on x86 linux or use wsl. you need wsl-usb to be able to use the usb from the computer on wsl.
 ## using it on android
 ![Alt my scope running on an android tablet](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/PXL_20240212_120237860.MV.jpg)
-### with proot-distro setup and a desktop enviroment
+### with proot-distro already setup with a desktop enviroment
 just download the folder android from here. you need to install libforms-dev and ibforms-bin to use it and to compile it. you need the app tcp uart transparent bridge, specify it to be server in the app and give yourself a static ip in the network. https://play.google.com/store/apps/details?id=com.hardcodedjoy.tcpuart
 to use it open a terminal in the folder, type ./scopeconnect.sh (assuming you made it executable with chmod +x or in the gui at first) then type ./lxardoscope (if the programm crashes the first time, then repeat this step). and afterwards you can use it.
 ### simple setup, just the scope
+if you only want the scope and nothing more, just install termux, termux x11 and tcp uart bridge. open termux, then do these steps
 
+1. pkg update
+2. pkg upgrade
+3. pkg install x11-repo termux-x11-nightly
+4. pkg install proot-distro
+5. proot-distro install debian
+6. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/simple-setup/proot-distro/scope.sh
+7. proot-distro login debian
+8. apt update
+9. apt upgrade
+10. apt install libforms-dev libforms-bin libx11-bin libx11-dev
+11. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/lxardoscope 
+12. chmod +x lxardoscope
+13. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/simple-setup/proot-distro/scope.sh
+14. chmod +x scope.sh

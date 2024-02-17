@@ -1,5 +1,5 @@
 # lxardoscope_wemos_d1_mini
-this is a single channel low frequency oscilloscope using a wemos d1 minis internal adc. you can use it just with the board itself but i have made a little daughterboard which contains a screw terminal, a capacitor for ac coupling, a switch to toggle between the ac and dc coupling and a bridge where you can add a resistor for meassuring higher voltages (it survives 5v, do this at your own risk as it is specified as 3.3v max). 
+this is a single channel low frequency oscilloscope using a wemos d1 minis internal adc. you can use it just with the board itself but i have made a little daughterboard which that makes it more like a real oscilloscope (described in detail further down)
 ![Alt the little daughterboard on the wemos board](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/schematic/image_1.jpg)
 the code is still work in progress. you need to download lxardoscope+, and specify 2000000 Baud in the code, 45ksps is possible or 22.5khz
 ## using it on x86 linux

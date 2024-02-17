@@ -19,7 +19,7 @@ if you only want the scope and nothing more, just install termux, termux x11 and
 3. pkg install x11-repo termux-x11-nightly
 4. pkg install proot-distro
 5. proot-distro install debian
-6. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/simple-setup/proot-distro/scope.sh
+6. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/simple-setup/scope.sh
 7. proot-distro login debian
 8. apt update
 9. apt upgrade

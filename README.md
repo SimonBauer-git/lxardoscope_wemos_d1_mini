@@ -2,7 +2,7 @@
 this is a single channel low frequency oscilloscope using a wemos d1 minis internal adc. you can use it just with the board itself but i have made a little daughterboard which that makes it more like a real oscilloscope.
 ![Alt the little daughterboard on the wemos board (v1,not able to meassure ac)](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/schematic/image_1.jpg)
 this is version 1 of the daughterboard, it couldnt meassure ac voltages (i.e. negative voltages)
-![Alt the little daughterboard on the wemos board (v1,not able to meassure ac)](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/schematic/image_1.jpg)
+![Alt the little daughterboard on the wemos board (v1,not able to meassure ac)](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/PXL_20240302_200453836.MV.jpg)
 this is version 2 of the daughterboard, it can meassure ac voltages with the use of a voltage devider. you need a 200k resistor depending on the voltage meassured.
 currently, 45ksps is possible or 22.5khz (so anything in the audio frequency range). 62ksps is possible or 31khz if you change the cpu frequency to 160mhz (can be done in arduino IDE).
 ## using it on x86 linux

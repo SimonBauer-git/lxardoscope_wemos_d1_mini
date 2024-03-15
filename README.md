@@ -32,5 +32,5 @@ if you only want the scope and nothing more, just install termux, termux x11 and
 14. chmod +x scope.sh
 # Function Generator:
 ![function generator](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/PXL_20240302_200633422.MV.jpg)
-A very simple function generator, using an audio jack output (Frequency limited to whatever the device can provide). daughterboard breaks out left and right channel along with ground to pins, no electronics involved, just a direct connection. you can use something like this to create the waveform, no install required, just use it https://cse.unl.edu/~jfalkinburg/husker-scope/app/page/FunctionGenerator
+A very simple function generator, using an audio jack output (Frequency limited to whatever the device can provide). daughterboard breaks out left and right channel along with ground to pins, no electronics involved, just a direct connection. you can use something like this to create the waveforms, no install required, just use it: https://cse.unl.edu/~jfalkinburg/husker-scope/app/page/FunctionGenerator
 or if you want an android app that has a different interface and a bit more functions look here: https://play.google.com/store/apps/details?id=com.keuwl.functiongenerator

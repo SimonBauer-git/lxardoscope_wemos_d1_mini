@@ -1,3 +1,4 @@
+// alternative approach, instead of continously sending data out, capture a number of samples and then send that in bulk
 #include <ESP8266WiFi.h>
 
 uint16_t adc_addr[500];

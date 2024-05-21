@@ -17,8 +17,10 @@ void scope()  //have an extra function that does the looping as this is faster t
 {
   while (true) {
     system_adc_read_fast(adc_addr, 500, 1); //adc_addr is where the Samples are stored, the next thing is the number of readings
-    for (int i; i<=500; i++){               //send the data out after taking 500 readings
+    int i = 0;
+    while (i<500){               //send the data out after taking 500 readings
     Serial.write(0x80 | adc_addr[i] >> 4);
-    Serial.write((adc_addr[i] << 3) & 0x70);}
+    Serial.write((adc_addr[i] << 3) & 0x70);
+    i++;}
   }
 }

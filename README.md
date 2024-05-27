@@ -2,7 +2,10 @@
 this is a single channel low frequency oscilloscope using a wemos d1 minis internal adc. you can use it just with the board itself but i have made a little daughterboard which that makes it more like a real oscilloscope.
 ![Alt the little daughterboard on the wemos board (able to meassure ac)](https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/PXL_20240302_200453836.MV.jpg)
 this is version 2 of the daughterboard, it can meassure ac voltages with the use of a voltage devider. you need a 200k resistor depending on the voltage meassured.
-currently, 45ksps is possible or 22.5khz (so anything in the audio frequency range). 62ksps is possible or 31khz if you change the cpu frequency to 160mhz (can be done in arduino IDE).
+## continous aquisition
+with continous aquisition (i.e. reading one sample, then transmitting that), 45ksps is possible or 22.5khz (so anything in the audio frequency range). 62ksps is possible or 31khz if you change the cpu frequency to 160mhz (can be done in arduino IDE).
+## buffered aquisition 
+by reading a lot of samples (in this case 16k) and then transmitting them in bulk much greater sampling rates are achivable, how much I am not sure of myself as due to the pulsed nature of the datastream the lxardoscope application doesnt show it correctly, I tested it with a 1 microsecond pulse though and it showed up as a squarewave, that was ok in terms of stability, so atleast 1 Mhz.
 ## using it on x86 linux
 just download the lxardoscope code for linux, specify 2000000 BAUD in the code and use it, no extra steps required
 ## using it on windows

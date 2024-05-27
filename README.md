@@ -5,7 +5,7 @@ this is version 2 of the daughterboard, it can meassure ac voltages with the use
 ## continous aquisition
 with continous aquisition (i.e. reading one sample, then transmitting that), 45ksps is possible or 22.5khz (so anything in the audio frequency range). 62ksps is possible or 31khz if you change the cpu frequency to 160mhz (can be done in arduino IDE).
 ## buffered aquisition 
-by reading a lot of samples (in this case 16k) and then transmitting them in bulk much greater sampling rates are achivable, how much I am not sure of myself as due to the pulsed nature of the datastream the lxardoscope application doesnt show it correctly, I tested it with a 1 microsecond pulse though and it showed up as a squarewave, that was ok in terms of stability, so atleast 1 Mhz.
+by reading a lot of samples (in this case 16384) and then transmitting them in bulk much greater sampling rates are achivable, how much I am not sure of myself as due to the pulsed nature of the datastream the lxardoscope application doesnt show it correctly, I tested it with a 1 microsecond pulse though and it showed up as a squarewave, that was ok in terms of stability, so atleast 1 Mhz.
 ## using it on x86 linux
 just download the lxardoscope code for linux, specify 2000000 BAUD in the code and use it, no extra steps required
 ## using it on windows

@@ -1,0 +1,322 @@
+/*
+ *
+ * This file is part of the LXARDOSCOPE package.
+ *
+ * LXARDOSCOPE is an Arduino based oscilloscope for Linux, using the Xforms library.
+ *
+ * Copyright (C) 2013 Oskar Leuthold
+ * 
+ * LXARDOSCOPE is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LXARDOSCOPE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with LXARDOSCOPE; see the file COPYING.  If not, write to
+ * the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
+ * MA 02111-1307, USA.
+ *
+ */
+
+
+This preamplifier is designed to drive the analog-to-digital converter (ADC)
+of an ATmega device, which in turn supplies the digitized input signal through a
+USB port to the the lxardoscope_0.95 program.
+
+Features:
+	- 5V only supply from the USB communication interface
+	- DC input range is -4V to +6V, with 10mV resolution
+	- AC input range is 1Vpp, with 1mV resolution. 
+	- high input impedance of 1MegOhm to reduce loading of monitored circuit nodes
+	- input current flows to ground (not to some bias point, which can produce
+		weird results on high impedance nodes)
+	- standard 10X and 100X probes can be connected to increase the input
+		voltage range
+	- probes are terminated in AC mode (no danger of high voltage at the
+		connection point with the preamplifier)
+	- auxiliary negative supply is clocked synchronously with the analog-digital
+		conversion process
+	- GND offset calibration and AC/DC path selection controlled remotely from 
+		lxardoscope GUI.
+	 
+	
+The input voltage range of -4 to +6V was chosen to for the following reasons:
+	- resolution is 10mV with 10bit ADC of the ATmega328.
+	- signals in circuits with single 5V supply can be monitored with some margin.
+	- signals which are symmetrical to GND can be monitored, up to 8Vpp
+
+Two versions of the schematic are presented:  
+	- Preamp_Atmega328.png: preamp with ATmega device and a TTL/USB converter
+	- Preamp_ArduinoUno.png: preamp with Arduino Uno board.
+
+
+1. Power supply
+---------------
+In order to keep the circuit simple, power is derived from the USB supply of the
+host computer. The preamplifier takes the supply then either from the TTL/USB
+converter or the Arduino board.
+In order to process positive and negative input signals with respect to ground,
+and terminate the input impedance to ground (instead of some positive voltage,
+which can cause unexpected behavior when measuring high impedance circuits), 
+a negative supply is required, either for the operational amplifiers or for a
+resistor network, which was chosen here.  The ATmega device is used to generate
+a square wave, which feeds a TC7660 charge pump circuit. This type of circuit
+connects a capacitor (Cpump) in a first phase across the incoming 5V supply, and
+then in a second phase in series with this supply, (positive side to ground),
+and charging a storage capacitor to -5V. 
+The frequency of the square wave signal is the same as the sampling frequency of
+the converter to minimize interaction of the clock frequencies. Since the output
+voltage might have significant ripple, depending on the size of the capacitors and
+the load current, a voltage regulator is therefore provided to generate a smooth
+and stable -3V reference. 
+A design choice was to use +3V as reference voltage to the ADC, assuming that
+the +5V rail from the USB supply is quite noisy. Thus an opamp is used in an
+inverting configuration to produce the +3V from the -3V. It turns out that it is
+beneficial for the input circuitry if the two supplies track. Adjustments
+with the optional trimmer allow for balancing the two supplies.
+In addition to the +3V rail, a +1.5V rail is required. A second opamp, in a
+unity gain configuration, buffers half of the +3V supply. 
+The MCP6002 opamp is probably not the best choice as reference amplifier,
+because it does not like to drive capacitive load. Therefore there are no
+filter capacitors on the +3V or +1.5V rail. Fortunately, this preamplifier is
+not a low-noise application, and other noise sources seem to dominate the 
+overall noise floor.  
+ 
+2. DC Signal path
+-----------------
+
+The resistor network at the input of the preamplifier serves several purposes: 
+	- shift and attenuate the input signal by a factor 10/3, such that the input
+	  range of -4V to 6V is transformed into a range of 0 to 3V:
+			input -4V -> output 0V
+			input 0V  -> output 1.2V
+			input 6V  -> output 3V
+	- generate proper bias voltage for the following amplifier stage.
+	- maintain input characteristics which behave like a 1 MegOhm resistor
+		connected to GND
+	- maintain a relatively high resistance in GND calibration mode.
+	- protect the sensitive circuity from overvoltage
+
+The network consists of resistors with 1% tolerance. In some cases, several
+physical resistors have to be combined to produce the final value shown on the
+schematic. See the separate chapter on the design process for this network.
+
+In the following, the path for channel 1 is explained. Channel 2 is identical.
+The input signal is attenuated to 90% by resistor R9 and switched through reed
+relay U7 to a resistor network consisting of R25, R26, R27 and R28, which 
+accomplishes level shifting and more attenuation. This produces an overall gain
+of 0.3, a level shift from 0V to 1.2V, and an input voltage of 0V when the input
+is left open. This resistor network ties into the +3V and -3V rails, and this is
+the reason the two supplies should be balanced.
+The output of the resistor network is fed to a buffer, which drives the ADC 
+through an RC lowpass. Experiments have shown that a capacitor should be tied
+to the ADC input, to absorb the charges injected by the internal switches of the
+ADC. The resistor provides some decoupling, such that the opamp does not have
+to drive a heavy capacitive load, which could lead to instability.
+
+
+3. AC Signal path with 3X gain
+---------------------------
+Reed relay U6 switches the AC path on, when the U7 turns the DC path off. The 
+two relays are controlled by the same signal from the ATmega, but the DC relay
+has the fixed side connected to Vdd, whereas the AC relay is connected to GND.
+R21 together with R10 at the input furnish DC resistance to GND. R23 sets the 
+bias point at 1.5V for the opamp. The combination of R9, R10, R21 and R23
+produces a combined input resistance of 1MegOhm. Resistors R16, R17 and R18 set
+the amplifier gain to 3.33, with the operating point at 1.5V. The amplifier
+drives the ADC through an RC lowpass, as for the DC signal path. With the atten-
+uation to 90% by R7 and an amplifier gain of 3.33, the overall gain from input
+to ADC becomes 3.0; therefore a 1V peak-to-peak signal drives the ADC input
+to the 3V full scale. 
+Note that this gain of 3 corresponds to a gain of 10 on the LXARDOSCOPE GUI,
+because 10 is the ratio with respect to the DC gain. 
+  
+4. Ground calibration
+---------------------
+For a perfect circuit, the ADC produces a code of 409 or 410 with input tied
+to ground:
+				1024/3.0*1.2=409.6
+Instead of setting this value in the software, a calibration procedure is provided
+which actually connects the input to ground with a reed relay. The associated 
+code is acquired and stored for subsequent measurements. 
+For this calibration procedure, relay U5 connects the DC path to ground, U7 dis-
+connects it from the input and U6 connects the AC path with the input, assuring
+the proper input resistance. 
+
+5. Measurements
+---------------
+The document LxaPreampMeasurements.pdf describes measurement results obtained 
+with a soundcard and a program called LXSNDTEST, also available from SourceForge.
+
+6. Notes about the design process
+---------------------------------
+In this section I explain some details of the preamplifier design for those
+who want to understand more how the circuit works. While the presentation pro-
+gresses in a linear fashion, the design process did involve designing, testing
+and comparing alternatives in various stages.
+In the following explanation, the symbol R is used for a unit resistor; its
+value is determined towards the end of the design procedure.
+
+6a: Schematic network1.png 
+--------------------------
+The goal is to find a simple network which attenuates and shifts the input
+signal as follows: -4V ->0V, 0V -> 1.2V, 6V -> 3V. 
+Figure 1: 
+I found out quickly that at least three resistors and a reference voltage are
+required. Here is a possible configuration. With an input voltage of -4V, we
+want an output voltage of 0V. Therefore the voltage across r3 is zero; it's
+value is undetermined. r1 has 4V across, r2 has 3V across, therefore if r1 is
+chosen to have a value of 4R, then r2 becomes 3R.
+
+Figure 2:
+With an input voltage of 6V we want an output voltage of 3V. The voltage across
+r2 is zero, it can be ignored for this condition. r1 has 3V across; r3 has also
+3V across, therefore it's value has to be 4R.
+
+Figure 3:
+With an input voltage of 0V, r1 and r3 are effectively in parallel, with a combined
+value of 2R. Therefore the 3V is divided into 5 parts of 0.6V each, with 2 parts
+across r1 and r3, and 3 parts across R2. Therefore the output voltage is 1.2V.
+So all input conditions specified above are satisfied.
+
+Figure 4:
+Another requirement for the network is that the input resistance is effectively
+referenced to GND, as in professional instruments. A probe connected to the input
+should be passive, meaning that no energy is flowing from the probe, AC or DC,
+because this could disturb the device under test. The requirement means for our
+network that for 0V input voltage, there is no current flowing in or out. There-
+fore the resistor r4 is provided to sink the current which is sourced through r1.
+The current through r1 is I=1.2V/4R. r4 has 3V across, therefore it's value needs
+to be R=U/I=3*4R/1.2 = 12R/1.2 = 10R.
+
+Figure 5:
+Another requirement for the network is that there must be way to connect the
+input to ground for determining the offset of the whole data acquisition circuit.
+It is desirable to avoid shorting the input directly to GND. 
+I considered the following switches:
+- CMOS multiplexer: because the large input signal range, the circuit needs to
+	be biased from the +/-5V supply. Some kind of level shifting is required for
+	the control signal, because the ATmega output levels are 0 and 5V. Choices
+	here are comparators or even optocouplers.
+- the classical solution is a reed relay. 
+Additionally, the internal circuitry should be protected from overvoltages (due
+to static discharge or inadvertent connection with a mains line). This requirement
+is much easier to fulfill if there is a fixed resistor in series with the input.
+Resistor r5 represents this resistor. It would also protect the ground switch
+from high current, if the preamplifier input was connected to a low impedance
+circuit node when calibrating. The overvoltage protection circuit is
+connected to the network side of the input resistor. If we choose a value for r5
+close to 100kOhm, the protection does not have to be very strong: three small
+signal diodes in series to +5V and one to -5V should provide adequate protection.
+
+6b: Schematic network2.png
+--------------------------
+
+Resistor r5 from figure 5 attenuates the incoming signal before it reaches the
+network considered in figure 4. I decided to have 10% of the attenuation on the
+input resistor r5, leaving 90% of the input signal into the rest of the network. 
+Thus the requirement for the network becomes:
+	-3.6V ->0V, 0V -> 1.2V, 5.4V -> 3V.
+
+Figure 6:
+This is similar to figure 1, but the input voltage is -3.6V instead of -4V.
+Thus the resistor voltages are 3V and 3.6V, resulting in values of 5R and 6R.
+
+Figure 7:
+This is similar to figure 2, but the input voltage is 5.4V instead of 6V.
+Thus the resistor voltages are 2.4V and 3V, resulting in a value of 7.5R for r3.
+ 
+Figure 8:
+The parallel connection of r1 and r3 yields 1/(1/6+1/7.5)=1/(5/30+4/30)=30/9=10/3.
+r2 is 15/3, therefore the 3V is divided into 25 parts of 0.12V each, with 10 parts
+across r1 and r3, and 15 parts across R2. Thus the output voltage is 1.2V, same
+as for figure 3. 
+
+Figure 9:
+In order to deal only with integers, the number of unit resistors has been multi-
+plied by 2 (the unit resistor will be half of the previous value, but it's real
+value will be determined later.)
+Current through r1 is I=1.2V/12R; value for r4 needs to be 12R*3/1.2=30R.
+The equivalent resistance seen from the input is ((r2||r3)+r1)||r4, or
+1/((1/(1/(1/10R+1/15R)+12R))+1/30R)=11.25R .
+
+Figure 10: 
+This illustrates calculation for r5: starting out that r5 should attenuate by
+10%, means that the network receives 90% of the signal. Therefore r5 needs to
+be 1/9th of the the network resistance: 11.25R/9=1.25R. The equivalent resistance
+seen from the input is 1.25R+11.25R=12.5R.
+
+Figure 11:
+The complete network, also showing the voltages on the three nodes for the
+three operating points discussed before. 
+
+6c: Schematic network3.png
+--------------------------
+When dealing with small signals riding on top of large DC levels, it is convenient
+to use AC coupling in the signal path; traditional oscilloscopes have such a 
+feature. While it is certainly possible to include AC coupling somewhere in the
+preamplifier, the equivalent function of a highpass can easily be implemented in
+software. The disadvantage is that the input signal has to be between -4V and 
++6V, in DC and AC mode. So it is not possible to display an AC signal centered
+at 20V DC. But neither could we examine such a signal in DC mode. For signals
+exceeding the range of -4V to +6V we just have to use a 10X or 100X probe, which
+will give much higher input impedance as a side benefit. 
+
+A more useful addition to the input stage presented so far would be higher gain
+in a capacitively coupled AC mode, such that the resolution would be 1mV instead
+of 10mV. From considerations on noise, the AC circuitry should receive the input
+signal without attenuation. Since the previously explained DC path provides an
+attenuation of 10/3, or a gain of 3/10=0.3, the AC path needs an attenuation
+of 10/30, or a gain of 30/10=3.0 . 
+
+Figure 12 shows the conceptual design of the DC path and AC path with gain. 
+A resistor from input to ground, marked ??, has been added with respect to 
+figure 11. The purpose is to bring the input resistance to exactly 1MegOhm. 
+It's value can be determined once the absolute values of the other resistors
+have been chosen. An optional overvoltage protection should be connected 
+after the 1.25R input resistor. 
+With an SPST switch, either one of the paths is engaged. In AC mode, the pre-
+amplifier input still needs to have a DC path to ground, because if a standard
+10X or 100X probe is used, the input would float up to the DC level of the probe
+input. The resistor marked with ?? in parallel with the series connection of
+1.25R and 22.5R provides this DC path. The opamp following the coupling capacitor
+is biased at 1.5V with a second 22.5R resistor. For higher frequencies, where
+the impedance of the coupling capacitor is negligible, the input resistance of 
+the AC path is 11.25R, which is the same as the input resistance of the DC path.
+The gain of the amplifier needs to be 3.333, which produces then with the input
+attenuation of 0.9 a total gain of 3.0. 
+In calibration mode, the relays must be controlled such that the input is
+connected to the AC path; therefore the DC path is isolated and the GND cali-
+bration relay cannot get high current. 
+
+6d: Final values
+----------------
+The last step involves deciding on the absolute values of the resistors. The
+input resistance of the circuit shown in figure 12 is 12.5R, as explained in
+connection with figure 10. This value should be higher or equal to 1MegOhm.
+In order to use resistors from the E24 series, I chose R=100kOhm. Thus the input
+resistance becomes 1.25MegOhm. The unknown resistor marked with ?? in figure 12
+has to be chosen such that the combined input resistance is 1MegOhm:
+		R=1/(1/1Meg-1/1.25Meg)=5.0Meg .
+The values of the other resistors then become: 125kOhm (non-standard), 3.0Meg,
+1.2Meg, 1.0Meg, 1.5Meg and 2.25Meg (non-standard). The non-standard values
+have to be built from a resistor combination. The schematics Preamp_Atmega328.png
+and Preamp_ArduinoUno.png show these final values for the resistor network.
+
+7. Conclusion
+-------------
+The initial idea of using a resistor network for shifting and attenuating the
+input signal has been implemented successfully. 
+
+
+ 
+ 
+
+
+
+

@@ -1,0 +1,9 @@
+Documentation for lxardoscope_0.95 is in the doc directory:
+- UserGuide_0.95.txt describes the lxardoscope program
+- LxaPreamp.txt describes the preamplifier which can be used with this program
+- LxaPreampMeasurements.pdf reports measurement results for the preamplifier
+		by itself and when connected to an ATmega analog-digital converter.
+- lxardoscope_T.png is a screenshot of the lxardoscope application when 
+	displaying sine waves with a time axis
+- lxardoscope_XY.png is a screenshot of the lxardoscope application when 
+	displaying sine waves in XY-mode.

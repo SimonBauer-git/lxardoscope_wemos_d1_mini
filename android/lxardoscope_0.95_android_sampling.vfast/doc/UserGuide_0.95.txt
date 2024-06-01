@@ -1,0 +1,356 @@
+/*
+ *
+ * This file is part of the LXARDOSCOPE package.
+ *
+ * LXARDOSCOPE is an Arduino based oscilloscope for Linux, using the Xforms library.
+ *
+ * Copyright (C) 2013 Oskar Leuthold
+ * 
+ * LXARDOSCOPE is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LXARDOSCOPE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with LXARDOSCOPE; see the file COPYING.  If not, write to
+ * the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
+ * MA 02111-1307, USA.
+ *
+ */
+
+
+Introduction
+************
+LXARDOSCOPE (LinuX-ARDunio-oscillOSCOPE) is a software implementation of an 
+oscilloscope in LINUX, using the Analog-Digial converter of an ATmega328 device
+or an ArduinoUNO board for data acquisition. 
+My goal was to keep the LXARDOSCOPE GUI as intuitive as possible for users who are
+familiar with hardware oscilloscopes. I am assuming that the vast majority of 
+users fall into this category, since this is a measuring instrument for use with
+electric circuits. Therefore this user guide does not cover how to use an 
+oscilloscope; tutorials for oscilloscopes are available on the internet. Extra
+functions provided here should be self explanatory - otherwise submit a request
+for clarification through the Sourceforge support page.
+When LXARDOSCOPE is running on my laptop, with CPU clock at 1.8GHz, under
+Mint 13, LXARDOSCOPE needs about 2% CPU time with 5 seconds of data displayed.
+Xorg's graphics engine needs more, depending on the amount and extent, basically
+how many pixels must be processed.  
+Lxardoscope_0.95 is designed to work with a preamplifier, which is described
+in a separate document, LxaPreamp.txt. This program allows for controlling the 
+GND/AC/DC configurations of the preamplifier from the GUI.
+
+Features
+********* 
+	- display modes: two channels, time/add/xy
+	- vertical: 2mV to 10V per division
+	- overall gain control for calibration
+	- horizontal: 2ms to 5 sec (full sweep)
+	- trace position adjustments: vertical and horizontal
+	- trigger: on/off, channel and edge selection
+	- trigger level: -10 to +10V
+	- hysteresis up to 5V
+	- signal measurements: max, min, pp, avg, rms
+	- display signal levels and timing at cursor position
+	- close to 2500 samples per second, per channel
+	- option for reviewing snapshot of data
+	- option for recording input data stream to file
+	- option to display recorded data from file
+	- timebase calibration adapting to ADC's conversion speed
+	- remote control of GND/AC/DC circuit configurations of the preamplifier.
+	- highpass with corner frequency of 2.5Hz in AC mode
+
+Arduino vs ATmega328
+*********************
+The Arduino UNO board contains the ATmega328 circuit and a chip to communicate
+with the USB port of a host computer. Most of the time I use the ATmega328 DIL
+circuits on breadboards, with a CP2102 based TTL/USB module for communicating
+with the computer's USB port. I prefer the modules from BAITE (available on 
+Ebay), which allow for easy replacing the RESET signal with DTR. 
+All the detailed testing was done with the ATmega32 on breadboard with the 
+BAITE module. The ArduinoUno works fine with this program on Mint9, but not re-
+liably on Mint13, for unknown reasons. When connecting a BAITE device to the TX
+pin of the Arduino board, I got the expected behavior. So the wiring was correct;
+it seems like Mint13 and the TTL/USB converter implemented on the ArduinoUno do
+not get along with each other. If you have an idea what is going on, then please
+let me know through Sourceforge.
+
+LXARDOSCOPE differences with respect to a conventional oscilloscope:
+********************************************************************
+The display is not updated continuously, but rather shows a snapshot of the data 
+approximately every 300ms. Thus with long time scales, the waveform seems to
+move from right to left; therefore a particular event can show up several times.
+As opposed to an analog oscilloscope, which operates with signals continuous in
+time and levels, LXARDOSCOPE works on the data points from the ATmega, which 
+converts the real signal to discrete samples in time and levels. The display
+shows simple linear interpolation between these data points, which is admittedly
+in general a poor approximation of the true signal. Another source of discrepancy
+are signal components input to the ATmega above 1.2kHz (half the sampling rate);
+they appear folded into components below 1.2kHz. This folding process is not 
+specific to this application, but rather a general property of any sampling
+process. And finally the fact that the ATmega samples the two channels in an
+alternating fashion creates additional artifacts (see below).     
+In LXARDOSCOPE the time base setting is in terms of full scale, not graticule
+division. This is based on considerations of the scaling process. For example,
+if full scale is set to 12ms, the LXARDOSCOPE graticule shows 13 vertical
+lines at 0, 1, 2 ...  10, 11, 12 ms, which is easy to read. On a division based
+approach, always 10 divisions are used. For 12ms full scale, the increments are
+1.2, thus producing grid lines at 0, 1.2, 2.4 .....10.8, 12, which are much less
+convenient to read. 
+
+
+Development
+***********
+LXARDOSCOPE version 0.95 has been developed and tested on Linux Mint13 (32bit)
+with ATmega328 devices, using the included lxardoscope95.ino (in the ATmega 
+directory). 
+ 
+
+Installation
+************
+The downloaded file contains an executable, which hopefully works on your computer.
+The appropriate XFORMS executable is linked statically, to simplify installation
+and to eliminate problems with incompatible versions of the library, which might
+exist on the host computer.
+After unpacking the downloaded file, cd to the lxardoscope directory and type
+" ./lxardoscope " (without quotes).
+For a general installation, type
+either " sudo make install "
+or " sudo cp lxardoscope /usr/local/sbin "
+After installation, the system wide start command is " lxardoscope ".
+
+If the supplied executable does not run on your system, you can re-compile:
+1. install libx11-dev (using apt, Synaptic)
+2. build:   " make "
+4. install and run as above
+
+If these steps do not work, you have to rebuild the Xforms library, which will
+produce a new libforms.a. LXARDOSCOPE requires XForms Version 1.0.93sp1. The
+directory xforms-1.0.93sp1_ext contains the files which might have to be updated.
+The XForms source package is available at 
+	http://savannah.nongnu.org/projects/xforms .
+
+
+Port issues
+***********
+On Ubuntu style LINUX distros, when connecting the Arduino UNO to the USB port, a
+device with a name starting as ttyACM is created in the /dev directory, which can
+be accessed like a regular serial port. If you remove the Arduino and reconnect
+again, the port number might change, for example from ttyACM0 to ttyACM1.
+With the CP2102 based Serial-to-USB converter circuits mentioned above, a device
+with a name starting as ttyUSB is created.
+If you have a computer with a serial port, then you can connect to an ATmega328
+using a simple inverter, as shown in ATmega328simple.png. The schematic 
+Interface.png shows a solution with a MAX232, and how optocouplers can be
+used to insulate the supplies of the ATmega (and with it the analog signal
+processing circuitry) from the PC. When working with the regular serial ports,
+keep in mind that the signal levels can be up to 15V. Some integrated circuits
+are destroyed if such a high voltage is applied to a pin.
+
+
+How to get started
+******************
+First you need to program the ATmega with the supplied sketch lxardoscope95.ino 
+from the ATmega/lxardoscope95 directory, using the Arduino IDE or Gnoduino
+(used on Mint9, but not on Mint13).
+Connect your analog signals to the preamplifier inputs.
+Two startup modes are available:
+1. choose serial port at startup:
+   type " lxardoskope /dev/ttyXXXX " with XXXX being the device name/number. The
+   program tries to initialize this port, but others can be selected later.
+2. choose serial port on GUI:
+   type " lxardoskope " . After starting up, the "Port" pulldown of the GUI is
+   populated with the port choices available from the /dev directory. The list
+   includes device names which start with "ttyS", "ttyACM" or "ttyUSB".
+If the selected port is busy due to some other process, then the initialization
+fails. A message is displayed in the terminal where LXARDOSCOPE was started,
+if the selected device is not available. 
+On success, the START button under the waveform area is enabled. Clicking the
+button starts the GND calibration routine. The scope display shows the calibration
+results (in units of LSB [least significant bits of the ADC]) for both channels.
+The numbers are close to 400 for the preamplifier described in LxaPreamp.txt, 
+because the ATMEGA reference voltage is 3V and the actual voltage coming into
+the ADC is 1.2V, when the preamplifier input is connected to GND.
+After calibration, the ATMEGA device starts acquiring the input signal and 
+LXARDOSCOPE displays the data. The pulse indicator changes color from grey, 
+and then blinks in response to the serial data stream from the ATMEGA. 
+At least some horizontal lines should be displayed, maybe already some waveforms.
+Then make the necessary adjustments to the timebase and vertical scale and
+position, as on a conventional oscilloscope.
+In display mode ADD, position and scale are taken from channel 1; entries for 
+channel 2 are disabled. In display mode X-Y, the selected trigger channel is 
+displayed in horizontal direction (independent whether triggering is enabled or
+not). 
+When triggering is enabled, source channel, edge, trigger level and hysteresis
+can be selected. The displayed waveform can be shifted to the left or to the 
+right, up to 500ms. This is useful for inspecting what happens immediately before
+the trigger time point. 
+The displayed signals can be measured by placing the cursor with the mouse and
+clicking at the time slice of interest. Time and levels are reported in the
+" Signal Values " box. The measurement applies to the data displayed at the
+moment the selection is made; the value is not continuously updated sub-
+sequently.
+After clicking the START/STOP button again, acquisition of new data stops and
+the internally stored waveforms can be inspected. Vertical Position and Scale,
+horizontal Full Scale and (with trigger) DisplayShift functions allow for zooming
+into the waveform. With DisplayShift, about half a second of data can be reviewed
+and measured using the cursor. 
+  
+Storing and reviewing data stream
+*********************************
+The data stream coming from the ATmega can be recorded to a file by clicking the 
+"Record" button before the "START" button. A new window pops up for entering
+the name of the new file (suggested extension is "raw"). When finished recor-
+ding, click the "STOP" button, and toggle the " Record " button to stop recor-
+ding and to save the file. The "Record" button is disabled when LXARDOSKOPE is
+running. The raw file contains 16-bit (2-byte) sample values, for both channels,
+no information on data rate. Of the 16 bits, only 10 are used, because that's 
+what the ATmega analog-digital converter delivers. 
+To inspect a raw file, select "file" on the "Device" pulldown (last entry). 
+A new window pops up for selecting the raw file. The file is loaded, and
+the beginning is displayed. The GUI changes in the Timebase area. A counter is
+added for navigating in the file under the Full Scale counter, with the following
+functionality:
+	- single right arrow: shift display to later data, by 20% of full scale.
+	- double right arrow: shift display to later data, by 80% of full scale.
+	- singe left arrow: shift display to earlier data, by 20% of full scale.
+	- double left arrow: shift display to earlier data, by 80% of full scale.
+The amount of shift is close to the values indicated; differences are due to
+rounding.
+Between the navigation buttons, the position of the first sample, shown on the
+left side of the waveform display, is indicated, in units of milliseconds.
+Commas are used to separate the seconds from the milliseconds, and the seconds
+from the thousand seconds. This area is actually an input field, accepting a 
+floating point number; the blue vertical line shows the position of the cursor.
+In the waveform display area, a yellow line is shown at the end of data, to
+distinguish from the case when the data itself is zero.
+A 4-digit pushwheel widget allows for setting the Sampling Rate, between 1000
+and 5000 samples per second. For accurate time measurements, the value must be
+set to the one reported when recording the file (using the Verbose button). 
+
+Communication with the ATmega and Preamplifier
+**********************************************
+Each channel has 4 separate modes of operation. A corresponding code is sent
+to the ATmega device upon selecting a new entry. With the preamplifier described
+in the document LxaPreamp.txt, the codes and associated features are shown in the
+following table:
+
+		channel1	channel2
+mode	code		code
+GND		1			4			GND calibration: preamp input connected to GND
+DC		2			5			DC: input range is -4V to +6V
+AC		2			5			AC: input range is -4V to +6V
+AC 10X	3			6			AC with gain: input range is +/-0.5V
+
+When the START button is pressed, a GND calibration is executed for both channels.
+In the two AC modes, a highpass filter is implemented in this LXARDOSCOPE program
+with a corner frequency of 2.5Hz. 
+LXARDOSCOPE adjusts the scaling factor automatically when selecting the AC 10X
+mode. If the gain of the preamplifier is different, then you can click the 
+"Options" button in the ATmega field and change the gain value in the popup
+window. Acceptable values are integers between 1 and 10 (inclusive), with default
+at 10.
+
+Sampling rate
+*************
+When using the supplied lxardoscope95.ino for the ATmeg328, with the transfer
+rate of 115200 baud, LXARDOSCOPE starts up assuming 2500 samples per second. The 
+actual rate at which data is delivered is continuously measured and the display
+settings updated in regular intervals.  
+After pressing the push button "Verbose", the actual sampling rate is reported in
+the terminal.  
+Preliminary tests indicate that the time required for analog-digital conversion
+is about the same as the data transfer time; thus by speeding up the data
+transfer, the converter becomes the bottleneck (unless accuracy is sacrificed
+for speed). Therefore LXARDOSCOPE version 0.95 supports only a fixed transfer
+rate of 115200 Baud. 
+
+Alternate Sampling
+******************
+The ATmeg328 samples channel 1 and channel 2 in an alternating fashion; this means
+not at the same time. In "Time" mode, LXARDOSCOPE displays channel 2 delayed
+by half a sample with respect to channel 1. Thus when feeding the same signal
+into both channels, they line up correctly; although for higher frequency signals
+the data points can clearly be seen as alternating.
+In "ADD" mode, the signals are interpolated and shifted, such that when feeding
+the same signal into both channels, and inverting one of them, the resulting
+signal is very small.
+In "XY" mode, the signals are not adjusted; therefore when feeding the same
+signal into both channels, the delay can clearly be seen: for a sine wave, an
+oval shape is shown. 
+When feeding identical square waves into both channels, things get really ugly...
+
+ATmega code
+***********
+The .pde file from previous versions had to be updated to work with Arduino1.0;
+lxardoscope95.ino is the new version. The upgrade of the Arduino software required
+changes in the communication part: 
+	Serial.print(lb|96,BYTE);
+replaced by 
+	Serial.write(lb|96);
+Due to some clever un-optimization from the Arduino folks, this simple change
+causes the program to produce a sample rate of 2441 instead of 2940. The addi-
+tional code required for programming the relays of the preamplifier and port
+switching cause another reduction in sampling rate to 2349. Optimizing this code
+by using direct addressing of the peripherals should be a fun and rewarding
+exercise. However at that point one might just go for overall higher speed,
+including higher transfer rate on the port (subject of the next LXARDOSCOPE 
+version?).
+In the sketch lxardoscope95.ino, the loop section is digitizing the signals on
+ports A0 and A1 in DC mode, and on ports A2 and A3 in AC mode, and sending the
+result after some formatting through the serial port to the USB link. In the
+middle and at the end of the loop, port 8 is switched to produce a square wave,
+which is used to drive the auxiliary power supply of the preamplifier. 
+Finally the serial port is checked for input, and the digital outputs set to
+high or low, according to the incoming number. See also the previous section 
+"Communication with the ATmega and Preamplifier" on the definitions of the codes.
+The characters * and # can be used to toggle the state of digital output 13, 
+where an LED is connected on the ArduinoUno. 
+Note that these numbers and characters can be communicated to the ATmega chip
+through other programs, for example the Serial Monitor of the Arduino software
+or Cutecom.  
+  
+
+Screen Capture
+**************
+The file lxardoscope_T.png contains a screen capture of the LXARDOSCOPE board and
+the software in action. A 293.6 Hz sine wave and a 1174.5Hz sine wave from a 
+sound card based generator (LXIGGEN) are displayed. The sampling rate is 2349
+samples per second. So the higher frequency signal is sampled twice per period,
+at the top and at the bottom (need to wait for this condition; trigger helps).
+The low frequency sine wave is sampled 8 times per period; that's why it looks
+ugly (LXARDOSCOPE offers only straight line interpolation between data points).
+The screen shot lxardoscope_XY.png shows an XY plot of a 50Hz sine wave on
+channel 1 and a 250Hz sine wave on channel 2, produced with LXIGGEN. The Lissajous
+figure displays nicely the frequency ratio of 5. 
+
+
+Measurement results
+*******************
+See the file LxaPreampMeasurements.pdf in the doc directory for characterization
+results of the preamplifier in conjunction with the ATmega ADC, using a soundcard
+based measurement system.
+
+History
+*******
+LXARDOSCOPE is based on an XOSKOPE-0.5 (eXtended oscillOSKOPE), released in 2001,
+created by J.Fernando Moyano (http://xoskope.sourceforge.net), and LXOSKOPE, 
+released in 2011 (available from http://lxoskope.sourceforge.net). These pre-
+decessors use the sound card for data acquisition instead of an ATmega device.
+
+Acknowledgement
+***************
+Thanks to J. Fernando Moyano for XOSKOPE for creating the first version. 
+Thanks to Dr. Zhao for creating the XFORMS library, which is used for the GUI.
+Thanks to Tim Witham for XOSCOPE, an early oscilloscope program which is still
+widely distributed.
+ 
+I hope you find LXARDOSCOPE useful. 
+Please submit comments to the support page of LXARDOSCOPE on Sourceforge.
+
+August 8, 2013 Oskar Leuthold
+

@@ -29,7 +29,8 @@ if you only want the scope and nothing more, just install termux, termux x11 and
 8. apt update
 9. apt upgrade
 10. apt install libforms-dev libforms-bin libx11-bin libx11-dev
-11. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/lxardoscope 
+11. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/lxardoscope
+11.1 wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/lxardoscope_0.95_android_sampling.vfast/lxardoscope
 12. chmod +x lxardoscope
 13. wget https://raw.githubusercontent.com/SimonBauer-git/lxardoscope_wemos_d1_mini/main/android/simple-setup/proot-distro/scope.sh
 14. chmod +x scope.sh

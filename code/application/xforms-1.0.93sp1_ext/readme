@@ -1,0 +1,19 @@
+Most of the following files are local copies from xforms-1.0.93sp1, 
+to allow for compilation of ipushwheel and iscaler, as required by the
+repeat functions.
+
+config.h		unchanged
+extern.h		unchanged
+flinternal.h	unchanged	
+forms.h			unchanged	
+libforms.a		unchanged
+local.h			unchanged	
+pcounter.h		unchanged	
+pvaluator.h		added hh[ 5 ], yy[ 5 ];
+				added button
+ulib.h			unchanged
+
+ipushwheel.h		new
+iscaler.h		new
+
+

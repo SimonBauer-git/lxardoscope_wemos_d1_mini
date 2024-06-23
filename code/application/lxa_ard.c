@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#define RUNBUFSIZE 8192
+#define RUNBUFSIZE 8292
 #define BAUDRATE B2000000
 
 // from http://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
@@ -334,7 +334,7 @@ void *lx_run(void *arg)
 						timeval_subtract(&tres,&fin,&sta);
 						//double tspan=(double)tres.tv_sec+1e-6*(double)tres.tv_usec;
 						// update the effective rate:
-						double tspan = 0.034;
+						double tspan = 0.05;
 						nbchar = 32768;
 						LX.charspersec=nbchar/tspan;
 						// charspersec=3*sampling_rate
